@@ -5,9 +5,23 @@ on:
     tags:
       - 'v*'
 
+env:
+  GH_TOKEN: ${{ github.token }}
+  ARTIFACT_DIR: "dist/artifacts"
+  NAME: "dnsMasqAPI"
+
+permissions:
+  contents: write
+  id-token: write
+
 jobs:
-  release:
-    runs-on: ubuntu-latest
+  release-amd64:
+    runs-on: ubuntu24-full-x64
+    env:
+      ARCH: "amd64"
+      PLATFORM: "linux"
+      ARCHIVE_NAME: "${{ env.NAME }}-${{ github.ref }}-${{ PLATFORM }}-${{ ARCH }}"
+      ARCHIVE_PATH: "${{ env.ARTIFACT_DIR }}/${{ env.ARCHIVE_NAME }}.tar.gz"
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -20,6 +34,19 @@ jobs:
       - name: Build
         run: make build
 
+      - name: Package
+        run: |
+          # Create ENV file
+          echo "ARCHIVE_NAME=\"${{ env.ARCHIVE_NAME }}\"" > dist/envvar.sh
+          echo "ARTIFACT_DIR=\"${{ env.ARTIFACT_DIR }}\"" >> dist/envvar.sh
+          echo "ARCHIVE_PATH=\"${{ env.ARCHIVE_PATH }}\"" >> dist/envvar.sh
+          echo "GITHUB_REF=\"${{ github.ref }}\"" >> dist/envvar.sh
+          echo "PLATFORM=\"${{ env.PLATFORM }}\"" >> dist/envvar.sh
+          echo "ARCH=\"${{ env.ARCH }}\"" >> dist/envvar.sh
+          
+          # Run packaging script
+          bash scripts/package.sh
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -29,11 +56,26 @@ jobs:
           draft: false
           prerelease: false
 
-      - name: Upload Release Assets
+      - name: Upload Archive
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dnsMasqAPI
-          asset_name: dnsMasqAPI
+          asset_path: ${{ env.ARCHIVE_PATH }}
+          asset_name: ${{ env.ARCHIVE_NAME }}.tar.gz
           asset_content_type: application/octet-stream
 
+      - name: Upload Installer
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ env.ARTIFACT_DIR }}/install.sh
+          asset_name: install.sh
+          asset_content_type: application/octet-stream
+
+      - name: Upload Checksum
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ env.ARTIFACT_DIR }}/sha256sum-${{ env.PLATFORM }}-${{ env.ARCH }}.txt
+          asset_name: sha256sum-${{ env.PLATFORM }}-${{ env.ARCH }}.txt
+          asset_content_type: application/octet-stream

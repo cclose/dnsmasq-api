@@ -23,6 +23,16 @@ setup:
 	cp config.yaml.dist config.yaml
 	cp dnsmasq.conf.dist dnsmasq.conf
 
+setup-env:
+	# Create ENV file for testing release scripts
+	mkdir -p dist
+	echo "ARCHIVE_NAME=\"dnsMasqAPI-v0.0.0-test-linux-amd64\"" > dist/envvar.sh
+	echo "ARTIFACT_DIR=\"dist/artifacts\"" >> dist/envvar.sh
+	echo "ARCHIVE_PATH=\"dist/artifacts/dnsMasqAPI-v0.0.0-test-linux-amd64.tar.gz\"" >> dist/envvar.sh
+	echo "GITHUB_REF=\"v0.0.0-test\"" >> dist/envvar.sh
+	echo "PLATFORM=\"linux\"" >> dist/envvar.sh
+	echo "ARCH=\"amd64\"" >> dist/envvar.sh
+
 lint:
 	golangci-lint run
 
@@ -40,7 +50,7 @@ docker:
 		-t dnsmasqapi:$(TAG)
 
 run: docker
-	$(DOCKER) run -d -p 8080:8080 -v "dnsmasq.conf:/etc/dnsmasq.conf" -v "config.yaml:/app/config.yaml" --name dnsapi localhost/dnsmasqapi:latest
+	$(DOCKER) run -d -p 8080:8080 -v "dnsmasq.conf:/etc/dnsmasq.d/api.conf" -v "config.yaml:/app/config.yaml" --name dnsapi localhost/dnsmasqapi:latest
 	curl localhost:8080/statusz
 
 logs:
