@@ -1,0 +1,39 @@
+# Binaries
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Git
+.git
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+*.txt
+
+# IDE directories
+.idea/
+.vscode/
+*.iml
+
+# Logs
+*.log
+
+# MacOS
+.DS_Store
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+
+# Ansible
+*.retry
+
+# Other
+*.swp
+*.swo
+*.tmp
+*.bak

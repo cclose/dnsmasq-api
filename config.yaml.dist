@@ -1,0 +1,8 @@
+---
+port: 8080
+ssl:
+  enabled: false
+  cert_file: ""
+  key_file: ""
+dnsmasq_config: "/etc/dnsmasq.conf"
+skip_dnsmasq_reload: true

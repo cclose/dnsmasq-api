@@ -1,0 +1,5 @@
+# Managed by DNSMasq API
+address=/example.com/10.1.9.1
+address=/sub1.example.com/10.1.10.1
+address=/sub2.example.com/10.1.10.2
+address=/sub2.example.com/10.1.11.2
