@@ -5,23 +5,20 @@ on:
     tags:
       - 'v*'
 
-env:
-  GH_TOKEN: ${{ github.token }}
-  ARTIFACT_DIR: "dist/artifacts"
-  NAME: "dnsMasqAPI"
-
 permissions:
   contents: write
   id-token: write
 
 jobs:
   release-amd64:
-    runs-on: ubuntu24-full-x64
+    runs-on: ubuntu-24.04
     env:
       ARCH: "amd64"
       PLATFORM: "linux"
-      ARCHIVE_NAME: "${{ env.NAME }}-${{ github.ref }}-${{ PLATFORM }}-${{ ARCH }}"
-      ARCHIVE_PATH: "${{ env.ARTIFACT_DIR }}/${{ env.ARCHIVE_NAME }}.tar.gz"
+      NAME: "dnsMasqAPI"
+      ARTIFACT_DIR: "dist/artifacts"
+      ARCHIVE_NAME: "dnsMasqAPI-${{ github.ref_name }}-linux-amd64"
+      ARCHIVE_PATH: "dist/artifacts/dnsMasqAPI-${{ github.ref_name }}-linux-amd64.tar.gz"
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -37,10 +34,11 @@ jobs:
       - name: Package
         run: |
           # Create ENV file
+          mkdir dist
           echo "ARCHIVE_NAME=\"${{ env.ARCHIVE_NAME }}\"" > dist/envvar.sh
           echo "ARTIFACT_DIR=\"${{ env.ARTIFACT_DIR }}\"" >> dist/envvar.sh
           echo "ARCHIVE_PATH=\"${{ env.ARCHIVE_PATH }}\"" >> dist/envvar.sh
-          echo "GITHUB_REF=\"${{ github.ref }}\"" >> dist/envvar.sh
+          echo "GITHUB_REF=\"${{ github.ref_name }}\"" >> dist/envvar.sh
           echo "PLATFORM=\"${{ env.PLATFORM }}\"" >> dist/envvar.sh
           echo "ARCH=\"${{ env.ARCH }}\"" >> dist/envvar.sh
           
@@ -50,14 +48,20 @@ jobs:
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
         with:
           tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          release_name: Release ${{ github.ref_name }}
           draft: false
-          prerelease: false
+          prerelease: true
+          body: |
+            Initial Release of this Repo!!
 
       - name: Upload Archive
         uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ${{ env.ARCHIVE_PATH }}
@@ -66,6 +70,8 @@ jobs:
 
       - name: Upload Installer
         uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ${{ env.ARTIFACT_DIR }}/install.sh
@@ -74,6 +80,8 @@ jobs:
 
       - name: Upload Checksum
         uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ${{ env.ARTIFACT_DIR }}/sha256sum-${{ env.PLATFORM }}-${{ env.ARCH }}.txt
