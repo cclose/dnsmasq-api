@@ -56,7 +56,7 @@ func startUpMessage(aConfig model.AppConfig, lAddr string) string {
 		aConfig.Config.DnsmasqConfig,
 		!aConfig.Config.SkipDNSMasqReload, // invert the boolean since it is for skipping
 	)
-	if aConfig.Config.SSLEnabled {
+	if aConfig.Config.SSL.Enabled {
 		msg += "  SSL Enabled\n"
 	}
 	msg += strings.Repeat("#", 73)
@@ -78,7 +78,7 @@ func startServer(ctx context.Context, appConfig model.AppConfig) error {
 	initMetrics(e)
 
 	// Boot our services
-	ds, err := service.NewDNSMasqService(config, service.WithLogger(logger))
+	ds, err := service.NewDNSMasqService(config, service.WithLogger(logger), service.WithConfig(config.DB))
 	if err != nil {
 		return err
 	}
@@ -92,8 +92,8 @@ func startServer(ctx context.Context, appConfig model.AppConfig) error {
 	// Calculate service address and boot
 	address := fmt.Sprintf(":%d", config.Port)
 	logger.Print(startUpMessage(appConfig, address))
-	if config.SSLEnabled {
-		err = e.StartTLS(address, config.SSLCertFile, config.SSLKeyFile)
+	if config.SSL.Enabled {
+		err = e.StartTLS(address, config.SSL.CertFile, config.SSL.KeyFile)
 	} else {
 		err = e.Start(address)
 	}

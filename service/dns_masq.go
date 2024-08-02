@@ -104,6 +104,23 @@ func WithDBFilePath(filePath string) DNSMasqServiceOption {
 	}
 }
 
+// WithConfig Creates DNSMasqServiceOptions from a DatabaseConfig
+func WithConfig(dbConfig model.DatabaseConfig) DNSMasqServiceOption {
+	options := []DNSMasqServiceOption{}
+	if dbConfig.BucketName != "" && dbConfig.BucketName != defaultDBBucketName {
+		options = append(options, WithDNSBucket(dbConfig.BucketName))
+	}
+	if dbConfig.FilePath != "" && dbConfig.FilePath != defaultDBFilePath {
+		options = append(options, WithDBFilePath(dbConfig.FilePath))
+	}
+
+	return func(ds *DNSMasqService) {
+		for _, option := range options {
+			option(ds)
+		}
+	}
+}
+
 func (ds *DNSMasqService) openDB(dbPath string) (err error) {
 	ds.db, err = bolt.Open(dbPath, dbFileMode, nil)
 	if err != nil {

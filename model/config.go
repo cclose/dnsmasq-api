@@ -8,12 +8,29 @@ type AppConfig struct {
 }
 
 type Config struct {
-	Port              int    `mapstructure:"port"`
-	SSLEnabled        bool   `mapstructure:"ssl.enabled"`
-	SSLCertFile       string `mapstructure:"ssl.cert_file"`
-	SSLKeyFile        string `mapstructure:"ssl.key_file"`
-	DnsmasqConfig     string `mapstructure:"dnsmasq_config"`
-	SkipDNSMasqReload bool   `mapstructure:"skip_dnsmasq_reload"`
+	DnsmasqConfig     string         `mapstructure:"dnsmasq_config"`
+	DB                DatabaseConfig `mapstructure:"db"`
+	Logging           LoggingConfig  `mapstructure:"logging"`
+	Port              int            `mapstructure:"port"`
+	SkipDNSMasqReload bool           `mapstructure:"skip_dnsmasq_reload"`
+	SSL               SSLConfig      `mapstructure:"ssl"`
+}
+
+type DatabaseConfig struct {
+	FilePath   string `mapstructure:"file_path"`
+	BucketName string `mapstructure:"bucket_name"`
+}
+
+type LoggingConfig struct {
+	Level    string `mapstructure:"level"`
+	Output   string `mapstructure:"output"`
+	FilePath string `mapstructure:"file_path"`
+}
+
+type SSLConfig struct {
+	Enabled  bool   `mapstructure:"enabled"`
+	CertFile string `mapstructure:"cert_file"`
+	KeyFile  string `mapstructure:"key_file"`
 }
 
 type BuildInfo struct {

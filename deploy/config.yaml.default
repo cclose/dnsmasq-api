@@ -1,0 +1,11 @@
+---
+db:
+  file_path: "/var/lib/dnsMasqAPI/dns.db"
+dnsmasq_config: "/etc/dnsmasq.d/api.conf"
+log:
+  file_path: "/var/log/dnsMasqAPI.log"
+port: 8080
+ssl:
+  enabled: false
+  cert_file: ""
+  key_file: ""

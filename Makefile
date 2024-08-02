@@ -39,6 +39,12 @@ lint:
 vet:
 	go vet ./...
 
+test:
+	go test -v ./...
+
+coverage:
+	go test -coverprofile=coverage.out ./...
+
 build:
 	go build -ldflags "-X 'main.Version=$(VERSION)' -X 'main.Commit=$(COMMIT)' -X 'main.BuildTimeStr=$(BUILD_TIME)'" -o dnsMasqAPI main.go
 
@@ -61,4 +67,4 @@ clean:
 	$(DOCKER) rm dnsapi
 
 
-.PHONY: setup lint vet build docker run logs clean
+.PHONY: setup lint vet test coverage build docker run logs clean

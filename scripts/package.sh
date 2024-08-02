@@ -28,7 +28,8 @@ cp systemd/dnsMasqAPI.service dist/bundle/lib/systemd/system/dnsMasqAPI.service
 # Move the default config into the dist
 echo "Bundling config.yaml"
 # This will effectively cat the config file while filtering out the skip line
-sed "/skip_dnsmasq_reload/d" config.yaml.dist  > dist/bundle/etc/dnsMasqAPI/config.yaml
+cp deploy/config.yaml.default dist/bundle/etc/dnsMasqAPI/config.yaml
+cp deploy/logrotated.conf dist/bundle/etc/dnsMasqAPI/logrotated.conf
 
 # Create a tar.gz archive
 echo "Archiving release as ${ARCHIVE_NAME}.tar.gz"

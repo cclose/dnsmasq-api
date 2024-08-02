@@ -8,6 +8,8 @@
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.coverprofile
+coverage.out
+coverage_report.log
 
 # If you prefer the repo root, this can be moved up to the global ignore file:
 # $ git config --global core.excludesfile '~/.gitignore_global'

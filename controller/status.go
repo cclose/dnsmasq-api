@@ -39,7 +39,7 @@ func (sc *StatusController) GetStatus(c echo.Context) error {
 	return c.JSON(http.StatusOK, echo.Map{
 		"status":     "running",
 		"time":       time.Now().Format(time.RFC3339),
-		"uptime":     time.Now().Sub(sc.startTime).String(),
+		"uptime":     time.Since(sc.startTime).String(),
 		"version":    sc.BuildInfo.Version,
 		"commit":     sc.BuildInfo.Commit,
 		"build_time": sc.BuildInfo.BuildTime.Format(time.RFC3339),
