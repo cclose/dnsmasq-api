@@ -20,6 +20,9 @@ mkdir -p "$ARTIFACT_DIR"
 echo "Bundling binary"
 cp dnsMasqAPI dist/bundle/bin/dnsMasqAPI
 chmod +x dist/bundle/bin/dnsMasqAPI
+echo "Bundling uninstall.sh"
+cp scripts/install.sh dist/bundle/bin/dnsMasqAPI-uninstall.sh
+chmod +x dist/bundle/bin/dnsMasqAPI-uninstall.sh
 
 # Move the systemd service into the dist
 echo "Bundling Service Unit"

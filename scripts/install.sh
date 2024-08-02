@@ -11,8 +11,8 @@ DMA_CONFIG=""
 DMA_GROUP=${DMA_GROUP:-dnsmasqapi}
 # DMA_USER The linux user that runs the API service. Default dnsmasqapi
 DMA_USER=${DMA_USER:-dnsmasqapi}
-# DM_USER The linux user that runs dnsMasq. This is usually root
-DM_USER=${DM_USER:-root}
+# DM_USER The linux user that runs dnsMasq. This is usually dnsmasq
+DM_USER=${DM_USER:-dnsmasq}
 # ARCH The architecture of this system
 ARCH=${ARCH-amd64}
 # PLATFORM The platform of this system
@@ -75,9 +75,10 @@ if [ -z "${SKIP_USER_SETUP}" ]; then
     if [ -z "${SKIP_SUDOERS}" ] ; then
       echo " - installing sudoers file /etc/sudoers.d/dnsmasqapi"
       # Install sudoers file for DMA_USER to reload dnsMasq
-      tee /etc/sudoers.d/dnsmasqapi <<EOF
-# Allow DMA_USER to reload dnsmasq.service without a password
-${DMA_USER} ALL=(ALL) NOPASSWD: /bin/systemctl reload dnsmasq.service
+      tee /etc/sudoers.d/dnsmasqapi  > /dev/null <<EOF
+# Allow DMA_USER to restart dnsmasq.service without a password
+${DMA_USER} ALL=(ALL) NOPASSWD: /bin/systemctl restart dnsmasq.service
+${DMA_USER} ALL=(ALL) NOPASSWD: /bin/systemctl status dnsmasq.service
 EOF
     fi
   fi
@@ -102,20 +103,23 @@ curl -L --silent $ARCHIVE_URL -o "/var/cache/${ARCHIVE_NAME}" || { echo "Failed 
 echo "Extracting to /usr/local"
 tar -xzf "/var/cache/${ARCHIVE_NAME}" -C /usr/local || { echo "Failed to extract ${ARCHIVE_NAME}"; exit 1; }
 
-# Set the user and group int he Systemd unit
+# Set the user and group in the Systemd unit
 sed -i "s/nobody/${DMA_USER}/" /usr/local/lib/systemd/system/dnsMasqAPI.service
 sed -i "s/nogroup/${DMA_GROUP}/" /usr/local/lib/systemd/system/dnsMasqAPI.service
 
 # If they want a different config, remove the default and update the systemd unit
 if [ -n "${DMA_CONFIG}" ] ; then
+  echo "Changing Systemd Unit Config to ${DMA_CONFIG}"
   sed -i "s|/usr/local/etc/dnsMasqAPI/config.yaml|${DMA_CONFIG}|" /usr/local/lib/systemd/system/dnsMasqAPI.service
   rm -f /usr/local/etc/dnsMasqAPI/config.yaml
 # If using standard config but custom log path
 else
   if [ -n "${LOG_TO_JOURNAL}" ] ; then
+    echo "Setting Logging to Journald (STDOUT)"
     sed -i "/log:/d" /usr/local/etc/dnsMasqAPI/config.yaml
     sed -i "/dnsMasqAPI.log/d" /usr/local/etc/dnsMasqAPI/config.yaml
   elif [ -n "${LOG_PATH}" ] ; then
+    echo "Setting log path to ${LOG_PATH}"
     sed -i "s|/var/log/dnsMasqAPI.log|${LOG_PATH}|" /usr/local/etc/dnsMasqAPI/config.yaml
   fi
 fi
@@ -124,6 +128,7 @@ fi
 sed -i "s/nobody/${DMA_USER}/" /usr/local/etc/dnsMasqAPI/logrotated.conf
 sed -i "s/nogroup/${DMA_GROUP}/" /usr/local/etc/dnsMasqAPI/logrotated.conf
 if [ -z "${SKIP_LOG_ROTATE}" ] && [ -z "${LOG_TO_JOURNAL}" ] ; then
+  echo "Deploying LogRotate"
   # Adjust the path if using a custom path
   if [ ! -z "${LOG_PATH}" ] ; then
     sed -i "s|/var/log/dnsMasqAPI.log|${LOG_PATH}|" /usr/local/etc/dnsMasqAPI/logrotated.conf
@@ -139,17 +144,21 @@ if [ ! -f "${DMA_DM_CONFIG}" ] ; then
 fi
 
 # Create the /var/lib directory for default db file and pid file
+echo "Creating /var/lib/dnsMasqAPI"
 mkdir -p /var/lib/dnsMasqAPI
-if [ "${DMA_USER}" != "root" ] ; then
-  chown -R "${DMA_USER}:${DMA_GROUP}" "${DMA_DM_CONFIG}"
-  chmod -R 550 /var/lib/dnsMasqAPI
+if [ -z "${SKIP_USER_SETUP}" ] ; then
+  if [ "${DMA_USER}" != "root" ] ; then
+    echo "Chowning /var/lib/dnsMasqAPI to ${DMA_USER}:${DMA_GROUP}"
+    chown -R "${DMA_USER}:${DMA_GROUP}" /var/lib/dnsMasqAPI
+    chmod -R 770 /var/lib/dnsMasqAPI
+  fi
 fi
 
 if [ -z "${SKIP_USER_SETUP}" ] ; then
   if [ "${DMA_USER}" != "root" ] ; then
-    echo " - setting permissions"
+    echo " - setting permissions on dnsMasq config"
     chown "${DMA_USER}:${DMA_GROUP}" "${DMA_DM_CONFIG}"
-    chmod 550 "$DMA_DM_CONFIG"
+    chmod 770 "$DMA_DM_CONFIG"
   fi
 fi
 

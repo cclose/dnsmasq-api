@@ -11,6 +11,8 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"io"
+	"os"
 	"strings"
 )
 
@@ -64,11 +66,66 @@ func startUpMessage(aConfig model.AppConfig, lAddr string) string {
 	return msg
 }
 
+// configureLogging Configures the logging provider based on the logging config
+func configureLogging(lConfig model.LoggingConfig) (*logrus.Logger, error) {
+	logger := logrus.New()
+	// If we set a file path
+	if lConfig.FilePath != "" {
+		// try to open the file and set as output
+		logFile, err := os.OpenFile(lConfig.FilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			return nil, err
+		}
+		logger.SetOutput(logFile)
+		if lConfig.Output != "" && strings.ToLower(lConfig.Output) != "file" {
+			// We defer this warning so we can finish setting up
+			defer func() {
+				logger.Warnf("ignoring contradictory config log.output = %s because log.file_path was set",
+					lConfig.Output)
+			}()
+		}
+
+		// file_path cancels out output
+	} else if lConfig.Output != "" {
+		// We're stupidly permissive here... lol
+		switch strings.ToLower(lConfig.Output) {
+		case "stdout", "standardout", "out":
+			logger.SetOutput(os.Stdout)
+		case "stderr", "standarderror", "standarderr", "stderrout", "err":
+			logger.SetOutput(os.Stderr)
+		case "syslog":
+			//logger.SetOutput()
+			return nil, fmt.Errorf("configuration log.output = syslog is not yet implemented. Use stdout")
+		case "file":
+			return nil, fmt.Errorf("invalid configuration log.output = file: set log.file_path instead")
+		default:
+			return nil, fmt.Errorf("unknown configuration log.output option '%s'", lConfig.Output)
+		}
+	}
+
+	if lConfig.Level != "" {
+		loggingLevel, err := logrus.ParseLevel(lConfig.Level)
+		if err != nil {
+			return nil, err
+		}
+		logger.SetLevel(loggingLevel)
+	}
+
+	return logger, nil
+}
+
 // startServer configures and boots the webservice
 func startServer(ctx context.Context, appConfig model.AppConfig) error {
 	config := appConfig.Config
-	// TODO configure logging from config
-	logger := logrus.New()
+	logger, err := configureLogging(config.Logging)
+	// Make sure we close our log file when the server shuts down
+	// check this BEFORE err incase we opened a file but still returned an err
+	if logCloser, ok := logger.Out.(io.Closer); ok {
+		defer logCloser.Close() // we're just gunna eat this error since we're shtting down
+	}
+	if err != nil {
+		return err
+	}
 
 	// Initialize Echo
 	e := echo.New()

@@ -314,7 +314,7 @@ func (ds *DNSMasqService) BuildDatabase() error {
 // ReloadDNSMasq Calls DNSMasq to reload it's config
 func (ds *DNSMasqService) ReloadDNSMasq() error {
 	metrics.GetOrCreateCounter(MetricDNSReloads).Inc()
-	cmd := exec.Command("sudo", "systemctl", "reload", "dnsmasq")
+	cmd := exec.Command("sudo", "systemctl", "restart", "dnsmasq.service")
 	err := cmd.Run()
 	if err != nil {
 		return err
