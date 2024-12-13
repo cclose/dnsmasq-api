@@ -174,7 +174,7 @@ func (ds *DNSMasqService) GetIPByHost(host string) ([]model.DNSRecord, error) {
 
 		data := bucket.Get([]byte(host))
 		if data == nil {
-			return fmt.Errorf(ErrorNoIPForHost) // Return error if no records found
+			return fmt.Errorf("%s", ErrorNoIPForHost) // Return error if no records found
 		}
 
 		if err := json.Unmarshal(data, &records); err != nil {
