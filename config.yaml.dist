@@ -1,0 +1,6 @@
+---
+port: 8080
+ssl:
+  enabled: false
+dnsmasq_config: "/etc/dnsmasq.d/api.conf"
+skip_dnsmasq_reload: true

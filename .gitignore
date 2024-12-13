@@ -1,0 +1,58 @@
+# Binaries for programs and plugins
+*.exe
+*.dll
+*.so
+*.dylib
+*.exe~
+*.out
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.coverprofile
+coverage.out
+coverage_report.log
+
+# If you prefer the repo root, this can be moved up to the global ignore file:
+# $ git config --global core.excludesfile '~/.gitignore_global'
+.DS_Store
+
+# Dependency directories
+.gopath/
+
+# Build directories
+bin/
+build/
+dist/
+
+# Log files
+*.log
+*.txt
+
+# IDE directories
+.idea/
+.vscode/
+*.iml
+
+# OS generated files
+Thumbs.db
+*.DS_Store
+*.swp
+*.swo
+*.tmp
+*.bak
+
+# Environment variables
+.env
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+
+# Ansible
+*.retry
+
+# Project Specific files
+dnsmasq.conf
+config*.yaml
+dns.db
+dnsMasqAPI

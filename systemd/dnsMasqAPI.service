@@ -1,0 +1,14 @@
+[Unit]
+Description=DNSMasq API Service
+After=network.target
+
+[Service]
+Type=simple
+User=nobody
+Group=nogroup
+ExecStart=/usr/local/bin/dnsMasqAPI server -c /usr/local/etc/dnsMasqAPI/config.yaml
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
